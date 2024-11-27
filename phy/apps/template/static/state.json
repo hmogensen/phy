@@ -39,6 +39,12 @@
       "n_bins": 200,
       "x_min": 0.0
     },
+    "PeristimHistView": {
+      "auto_update": true,
+      "x_min": -0.5,
+      "x_max": 0.5,
+      "n_bins": 100
+    },
     "GUI_VERSION": 2,
     "ISIView": {
       "auto_update": true,
@@ -85,6 +91,7 @@
       "CorrelogramView": 1,
       "FeatureView": 1,
       "FiringRateView": 1,
+      "PeristimHistView": 1,
       "ISIView": 1,
       "ProbeView": 1,
       "SimilarityView": 1,

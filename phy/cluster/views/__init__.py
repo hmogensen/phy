@@ -13,6 +13,7 @@ from .amplitude import AmplitudeView  # noqa
 from .correlogram import CorrelogramView  # noqa
 from .feature import FeatureView  # noqa
 from .histogram import HistogramView, ISIView, FiringRateView  # noqa
+from .trigger_histogram import PeristimHistView
 from .probe import ProbeView  # noqa
 from .raster import RasterView  # noqa
 from .scatter import ScatterView  # noqa
