@@ -29,13 +29,13 @@ from phy.cluster.views.base import ManualClusteringView, BaseColorView
 from phy.cluster.views import (
     WaveformView, FeatureView, TraceView, TraceImageView, CorrelogramView, AmplitudeView,
     ScatterView, ProbeView, RasterView, TemplateView, ISIView, FiringRateView, ClusterScatterView,
-    select_traces)
+    PeristimHistView, select_traces)
 from phy.cluster.views.trace import _iter_spike_waveforms
 from phy.gui import GUI
 from phy.gui.gui import _prompt_save
 from phy.gui.qt import AsyncCaller
 from phy.gui.state import _gui_state_path
-from phy.gui.widgets import IPythonView
+from phy.gui.widgets import IPythonView, Barrier
 from phy.utils.context import Context, _cache_methods
 from phy.utils.plugin import attach_plugins
 
@@ -854,7 +854,7 @@ class BaseController(object):
     # Views to load by default.
     _new_views = (
         'ClusterScatterView', 'CorrelogramView', 'AmplitudeView',
-        'ISIView', 'FiringRateView', 'ProbeView',
+        'ISIView', 'FiringRateView', 'ProbeView', 'PeristimHistView'
     )
 
     default_shortcuts = {
@@ -970,6 +970,7 @@ class BaseController(object):
             'CorrelogramView': self.create_correlogram_view,
             'ISIView': self._make_histogram_view(ISIView, self._get_isi),
             'FiringRateView': self._make_histogram_view(FiringRateView, self._get_firing_rate),
+            'PeristimHistView': self._make_histogram_view(PeristimHistView, self._get_peristim_hist),
             'AmplitudeView': self.create_amplitude_view,
             'ProbeView': self.create_probe_view,
             'RasterView': self.create_raster_view,
@@ -1015,6 +1016,7 @@ class BaseController(object):
             similarity=self.similarity_functions[self.similarity],
             new_cluster_id=new_cluster_id,
             context=self.context,
+            triggers=self.model.triggers
         )
         # Load the non-group metadata from the model to the cluster_meta.
         for name in sorted(self.model.metadata):
@@ -1510,6 +1512,10 @@ class BaseController(object):
 
     # Histogram views
     # -------------------------------------------------------------------------
+    
+    def _get_trigger_times(self, trigger_name):
+        """Return trigger times for selected trigger"""
+        return self.model.trigger_times[self.model.trigger_groups == trigger_name]
 
     def _make_histogram_view(self, view_cls, method):
         """Return a function that creates a HistogramView of a given class."""
@@ -1529,6 +1535,46 @@ class BaseController(object):
         dur = self.model.duration
         return Bunch(data=st, x_min=0, x_max=dur)
 
+
+    def _get_peristim_hist(self, cluster_id):
+        
+        """Return the peristimulus histogram data of a cluster around selected triggers."""
+        # Get spike times
+        st = self.get_spike_times(cluster_id)
+        
+        # Default window: -0.5s to +0.5s around trigger
+        window = [-0.5, 0.5]
+
+        trigger_ids = self.supervisor.selected_triggers
+
+        if trigger_ids is None:
+            return Bunch(data=np.array([]), x_min=window[0], x_max=window[1])
+        
+        # Collect trigger times from all selected triggers
+        trigger_times = []
+        for trigger_id in trigger_ids:
+            # Get trigger times from triggers dict using trigger ID
+            trigger_times.extend(self.model.triggers.get(trigger_id, []))
+        trigger_times = np.array(trigger_times)
+
+        if len(trigger_times) == 0:
+            return Bunch(data=np.array([]), x_min=window[0], x_max=window[1])
+                
+        # Compute histogram relative to each trigger time 
+        hist_data = []
+        for t in trigger_times:
+            # Get relative times of spikes to this trigger
+            rel_times = st - t
+            # Only include spikes within our window
+            mask = (rel_times >= window[0]) & (rel_times < window[1])
+            hist_data.extend(rel_times[mask])
+        
+        return Bunch(
+            data=np.array(hist_data),
+            x_min=window[0],
+            x_max=window[1]
+        )
+    
     # Spike attributes views
     # -------------------------------------------------------------------------
 

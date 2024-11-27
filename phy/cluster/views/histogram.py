@@ -332,3 +332,24 @@ class FiringRateView(HistogramView):
         'set_x_min (%s)' % bin_unit: '%smin' % alias_char,
         'set_x_max (%s)' % bin_unit: '%smax' % alias_char,
     }
+
+
+class PeristimHistView(HistogramView):
+    """Histogram view showing the peristimulus time histogram (PSTH)."""
+    x_min = -0.5  # window starts 500ms before stimulus by default
+    x_max = 0.5   # window ends 500ms after stimulus by default
+    n_bins = 100  # 10ms bins by default
+    alias_char = 'psth'  # provide `:psthn` (set number of bins) and `:psthm` (set max bin) snippets
+    bin_unit = 'ms'  # user-provided bin values in milliseconds, but stored in seconds
+    listen_to_triggers = True
+
+    default_shortcuts = {
+        'change_window_size': 'ctrl+wheel',
+    }
+
+    default_snippets = {
+        'set_n_bins': '%sn' % alias_char,
+        'set_bin_size (%s)' % bin_unit: '%sb' % alias_char,
+        'set_x_min (%s)' % bin_unit: '%smin' % alias_char,
+        'set_x_max (%s)' % bin_unit: '%smax' % alias_char,
+    }
