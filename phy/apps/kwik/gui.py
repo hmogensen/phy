@@ -93,6 +93,7 @@ class KwikController(WaveformMixin, FeatureMixin, TraceMixin, BaseController):
         'FeatureView',
         'AmplitudeView',
         'FiringRateView',
+        'PeristimHistView',
         'TraceView',
     )
 

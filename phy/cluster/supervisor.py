@@ -322,7 +322,7 @@ class ClusterView(Table):
 
     def _set_styles(self):
         self.builder.add_style(self._styles)
-
+    
     @property
     def state(self):
         """Return the cluster view state, with the current sort and selection."""
@@ -385,6 +385,26 @@ class SimilarityView(ClusterView):
             self.remove_all()
         return similar
 
+# -----------------------------------------------------------------------------
+# Trigger view
+# -----------------------------------------------------------------------------
+
+class TriggerView(Table):
+    """Display a table of triggers with their names and counts."""
+    _view_name = 'trigger_view'
+
+    def __init__(self, *args, data=None, columns=(), sort=None):
+        HTMLWidget.__init__(
+            self, *args, title=self.__class__.__name__, debounce_events=('select',))
+        self._reset_table(data=data, columns=columns, sort=sort)
+
+    def _reset_table(self, data=None, columns=(), sort=None):
+        emit(self._view_name + '_init', self)
+        if 'id' in columns:
+            columns.remove('id')
+        columns = ['id', 'name', 'n_triggers']
+        sort = sort or ('name', 'asc')
+        self._init_table(columns=columns, data=data, sort=sort)
 
 # -----------------------------------------------------------------------------
 # ActionCreator
@@ -609,13 +629,16 @@ class Supervisor(object):
 
     def __init__(
             self, spike_clusters=None, cluster_groups=None, cluster_metrics=None,
-            cluster_labels=None, similarity=None, new_cluster_id=None, sort=None, context=None):
+            cluster_labels=None, similarity=None, new_cluster_id=None, sort=None, context=None,
+            triggers=None):
         super(Supervisor, self).__init__()
         self.context = context
         self.similarity = similarity  # function cluster => [(cl, sim), ...]
         self.actions = None  # will be set when attaching the GUI
         self._is_dirty = None
         self._sort = sort  # Initial sort requested in the constructor
+
+        self._selected_triggers = []
 
         # Cluster metrics.
         # This is a dict {name: func cluster_id => value}.
@@ -637,7 +660,10 @@ class Supervisor(object):
         spc = context.load('spikes_per_cluster') if context else None
         self.clustering = Clustering(
             spike_clusters, spikes_per_cluster=spc, new_cluster_id=new_cluster_id)
-
+        
+        # Save trigger times reference
+        self.triggers = triggers or {}  # Dictionary of trigger_id -> Dict
+        
         # Cache the spikes_per_cluster array.
         self._save_spikes_per_cluster()
 
@@ -754,7 +780,18 @@ class Supervisor(object):
             out[key] = self.cluster_meta.get(key, cluster_id)
         out['is_masked'] = _is_group_masked(out.get('group', None))
         return {k: v for k, v in out.items() if k not in exclude}
-
+    
+    def get_trigger_info(self, trigger_id):
+        """Return the data associated to a given trigger."""
+        trg = self.triggers[trigger_id]
+        times = trg["times"]
+        name = trg["name"]
+        return {
+            'id': trigger_id,
+            'name': name,
+            'n_triggers': len(times),
+        }
+    
     def _create_views(self, gui=None, sort=None):
         """Create the cluster view and similarity view."""
 
@@ -773,6 +810,15 @@ class Supervisor(object):
             self._get_similar_clusters, event='request_similar_clusters',
             sender=self.similarity_view)
         connect(self._similar_selected, event='select', sender=self.similarity_view)
+
+        # Create the trigger view
+        self.trigger_view = TriggerView(
+            gui,
+            data=[self.get_trigger_info(i) for i in self.triggers],
+            columns=['id', 'name', 'n_triggers'],
+            sort=('name', 'asc')
+        )
+        connect(self._triggers_selected, event='select', sender=self.trigger_view)
 
         # Change the state after every clustering action, according to the action flow.
         connect(self._after_action, event='cluster', sender=self)
@@ -842,6 +888,18 @@ class Supervisor(object):
         if similar:
             self.similarity_view.scroll_to(similar[-1])
         self.similarity_view.dock.set_status('similar clusters: %s' % ', '.join(map(str, similar)))
+
+    def _triggers_selected(self, sender, obj):
+        """When triggers are selected in the trigger view."""
+        if sender != self.trigger_view:
+            return
+        self._selected_triggers = obj['selected']
+        trigger_ids = obj['selected'] 
+        logger.debug("Triggers selected: %s", trigger_ids)
+        if trigger_ids:
+            self.trigger_view.scroll_to(trigger_ids[-1])
+        self.trigger_view.dock.set_status('triggers: %s' % ', '.join(map(str, trigger_ids)))
+        emit('select_triggers', self, trigger_ids)
 
     def _on_action(self, sender, name, *args):
         """Called when an action is triggered: enqueue and process the task."""
@@ -918,7 +976,7 @@ class Supervisor(object):
 
     # Properties
     # -------------------------------------------------------------------------
-
+    
     @property
     def cluster_info(self):
         """The cluster view table as a list of per-cluster dictionaries."""
@@ -960,6 +1018,7 @@ class Supervisor(object):
         connect(self._save_gui_state, event='close', sender=gui)
         gui.add_view(self.cluster_view, position='left', closable=False)
         gui.add_view(self.similarity_view, position='left', closable=False)
+        gui.add_view(self.trigger_view, position='left', closable=False)
 
         # Create all supervisor actions (edit and view menu).
         self.action_creator.attach(gui)
@@ -1012,6 +1071,10 @@ class Supervisor(object):
         """Selected clusters in the cluster and similarity views."""
         return _uniq(self.selected_clusters + self.selected_similar)
 
+    @property
+    def selected_triggers(self):
+        return self._selected_triggers
+    
     def n_spikes(self, cluster_id):
         """Number of spikes in a given cluster."""
         return len(self.clustering.spikes_per_cluster.get(cluster_id, []))

@@ -65,6 +65,7 @@ class ManualClusteringView(object):
     plot_canvas_class = PlotCanvas
     ex_status = ''  # the GUI can update this to
     max_n_clusters = 0  # By default, show all clusters.
+    listen_to_triggers = False
 
     def __init__(self, shortcuts=None, **kwargs):
         self._lock = None
@@ -147,7 +148,7 @@ class ManualClusteringView(object):
         if not self.auto_update or self._closed:
             return
         # Only the Supervisor and some specific views can trigger a proper select event.
-        if sender.__class__.__name__ in ('ClusterView', 'SimilarityView'):
+        if sender.__class__.__name__ in ('ClusterView', 'SimilarityView', 'TriggerView'):
             return
         assert isinstance(cluster_ids, list)
         if not cluster_ids:
@@ -222,6 +223,20 @@ class ManualClusteringView(object):
             worker.run()
             self._lock = None
 
+    def on_trigger_select_threaded(self, sender, trigger_ids, gui=None, **kwargs):
+        """Handle trigger selection events separately from cluster selection."""
+        # Decide whether the view should react to the select event or not.
+        if not self.auto_update or self._closed:
+            return
+        # Only the Supervisor and some specific views can trigger a proper select event.
+        if sender.__class__.__name__ in ('ClusterView', 'SimilarityView', 'TriggerView'):
+            return
+        assert isinstance(trigger_ids, list)
+        if not trigger_ids:
+            return
+        
+        self.plot(**kwargs)
+        
     def on_cluster(self, up):
         """Callback function when a clustering action occurs. May be overriden.
 
@@ -241,7 +256,7 @@ class ManualClusteringView(object):
         - Add the view to the GUI.
         - Update the view's attribute from the GUI state
         - Add the default view actions (auto_update, screenshot)
-        - Bind the on_select() method to the select event raised by the supervisor.
+        - Bind the on_select() method to the select and select_triggers event raised by the supervisor.
 
         """
 
@@ -267,6 +282,9 @@ class ManualClusteringView(object):
 
         on_select = partial(self.on_select_threaded, gui=gui)
         connect(on_select, event='select')
+        if self.listen_to_triggers:
+            on_trigger_select = partial(self.on_trigger_select_threaded, gui=gui)
+            connect(on_trigger_select, event='select_triggers')
 
         # Save the view state in the GUI state.
         @connect
@@ -411,7 +429,7 @@ class BaseGlobalView(object):
         if not self.auto_update:
             return
         # Only the Supervisor and some specific views can trigger a proper select event.
-        if sender.__class__.__name__ in ('ClusterView', 'SimilarityView'):
+        if sender.__class__.__name__ in ('ClusterView', 'SimilarityView', 'TriggerView'):
             return
         assert isinstance(cluster_ids, list)
         if not cluster_ids:

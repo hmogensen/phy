@@ -197,6 +197,10 @@ class HistogramView(ScalingMixin, ManualClusteringView):
         self.canvas.update()
         self.update_status()
 
+        # self.visual.show()
+        # self.text_visual.show()
+        # self.canvas.update()
+
     def attach(self, gui):
         """Attach the view to the GUI."""
         super(HistogramView, self).attach(gui)
