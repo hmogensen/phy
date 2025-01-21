@@ -1,0 +1,85 @@
+from phy import IPlugin
+import numpy as np
+import networkx as nx
+from phy.plot.plot import PlotCanvasMpl
+from functools import partial
+from phylib.utils import Bunch, connect, unconnect, emit
+from phy.cluster.views import ManualClusteringView 
+
+
+class GraphView(ManualClusteringView):
+    plot_canvas_class = PlotCanvasMpl
+
+    def __init__(self, graph_input):
+        super(GraphView, self).__init__()
+        self.graph_input = graph_input
+        # self.canvas = PlotCanvasMpl() # Use self.canvas.attach_events(self) to make it interactive
+
+    def attach(self, gui):
+        super(GraphView, self).attach(gui)
+        on_update = partial(self.on_graph_update)
+        connect(on_update, event='update-graph')
+
+    def on_graph_update(self, state):
+        data = self.graph_input()
+        settings = data.params
+
+        abs_dist_mat = data.abs_dist_mat
+        rel_dist_mat = data.rel_dist_mat
+        template_amp_channels = data.template_amp_channels
+        template_units = data.template_units
+        template_batch_nr = data.template_batch_nr
+        template_amplitudes = data.template_amplitudes
+        template_clusters = data.template_clusters
+
+        ch_window_width = settings['ch_window_width']
+        unit_thr = settings['unit_thr']
+        height_thr = settings['height_thr']
+        abs_dist_thr = settings['abs_dist_thr']
+        rel_dist_thr = settings['rel_dist_thr']
+        batch_delay_thr = settings['batch_delay_thr']
+
+        n_batches = len(template_amplitudes)
+
+        batch_pos = np.linspace(-0.3, 0.3, n_batches)
+        channel_pos = np.linspace(-0.3, 0.3, ch_window_width)[::-1]
+
+        if template_clusters is None:
+            template_clusters = np.arange(template_units.size)
+        
+        indices = np.where((template_units > unit_thr) & (template_amplitudes > height_thr))[0]
+        p = np.argwhere((abs_dist_mat[indices][:, indices] > 0) & 
+                        (((abs_dist_mat[indices][:, indices] < abs_dist_thr)) 
+                         | (rel_dist_mat[indices][:, indices] < rel_dist_thr)))
+        p = indices[p]
+        
+        ga = nx.Graph()
+        for i in range(p.shape[0]):
+            w = np.abs(template_batch_nr[p[i][0]] - template_batch_nr[p[i][1]])
+            if w <= batch_delay_thr:
+                ga.add_edge(p[i][0], p[i][1], weight=w)
+        
+        self.canvas.clear()
+        pos = nx.spring_layout(ga)
+        labels = nx.get_edge_attributes(ga, 'weight')
+        pos = nx.spring_layout(ga)
+        for k in pos.keys():
+            pos[k][0] = batch_pos[template_batch_nr[k]]
+            pos[k][1] = channel_pos[template_amp_channels[k] - 1]
+        
+        node_colors = template_clusters
+        
+        self.canvas.ax.set_title("Template clusters")
+        nx.draw_networkx(ga, pos)
+        nx.draw_networkx_edge_labels(ga, pos, edge_labels=labels)
+        nx.draw_networkx_nodes(ga, pos)  # node_color=node_colors
+        self.canvas.show()
+
+
+class GraphViewPlugin(IPlugin):
+    def attach_to_controller(self, controller):
+        def create_graph_view():
+            return GraphView(graph_input=controller.get_graph_data)
+
+        if controller.graph_model is not None:
+            controller.view_creator["GraphView"] = create_graph_view

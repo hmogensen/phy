@@ -117,6 +117,15 @@ def _gui_command(f):
         help="Clear the GUI state in `~/.phy/` and in `.phy`.")(f)
     return f
 
+#------------------------------------------------------------------------------
+# View graph flag
+#------------------------------------------------------------------------------
+def _load_graph_flag(f):
+    f = click.option(
+        '--load-graph/--no-load-graph', default=False,
+        help="View graph in phy"
+    )(f)
+    return f
 
 #------------------------------------------------------------------------------
 # Raw data GUI
@@ -147,6 +156,7 @@ def cli_trace_gui(ctx, dat_path, **kwargs):
 @phycli.command('template-gui')  # pragma: no cover
 @click.argument('params-path', type=click.Path(exists=True))
 @_gui_command
+@_load_graph_flag
 @click.pass_context
 def cli_template_gui(ctx, params_path, **kwargs):
     """Launch the template GUI on a params.py file."""

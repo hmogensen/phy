@@ -39,6 +39,9 @@ from phy.gui.widgets import IPythonView, Barrier
 from phy.utils.context import Context, _cache_methods
 from phy.utils.plugin import attach_plugins
 
+from plugins.graph_view import GraphViewPlugin
+from plugins.update_graph_view_btn import UpdateGraphViewBtnPlugin
+
 logger = logging.getLogger(__name__)
 
 
@@ -866,7 +869,8 @@ class BaseController(object):
     def __init__(
             self, dir_path=None, config_dir=None, model=None,
             clear_cache=None, clear_state=None,
-            enable_threading=True, **kwargs):
+            enable_threading=True, load_graph=None,
+            **kwargs):
 
         self._enable_threading = enable_threading
 
@@ -879,6 +883,8 @@ class BaseController(object):
 
         # Create or reuse a Model instance (any object)
         self.model = self._create_model(dir_path=dir_path, **kwargs) if model is None else model
+
+        self.graph_model = self._create_graph_model(dir_path=dir_path) if load_graph else None
 
         # Set up the cache.
         self._set_cache(clear_cache)
@@ -936,6 +942,10 @@ class BaseController(object):
     def _create_model(self, dir_path=None, **kwargs):
         """Create a model using the constructor parameters. To be overriden."""
         return
+    
+    def _create_graph_model(self, dir_path=None):
+        """Create a model containing graph data. Override if GraphViewPlugin is to be used"""
+        return None
 
     def _clear_cache(self):
         logger.warn("Deleting the cache directory %s.", self.cache_dir)

@@ -15,6 +15,7 @@ import numpy as np
 
 from phylib import _add_log_file
 from phylib.io.model import TemplateModel, load_model
+from phylib.io.graph_model import GraphModel
 from phylib.io.traces import MtscompEphysReader
 from phylib.utils import Bunch, connect
 
@@ -91,6 +92,9 @@ class TemplateController(WaveformMixin, FeatureMixin, TemplateMixin, TraceMixin,
 
     def _create_model(self, dir_path=None, **kwargs):
         return TemplateModel(dir_path=dir_path, **kwargs)
+    
+    def _create_graph_model(self, dir_path=None):
+        return GraphModel(dir_path=dir_path)
 
     def _set_supervisor(self):
         super(TemplateController, self)._set_supervisor()
@@ -145,6 +149,9 @@ class TemplateController(WaveformMixin, FeatureMixin, TemplateMixin, TraceMixin,
 
     # Public methods
     # -------------------------------------------------------------------------
+
+    def get_graph_data(self):
+        return self.graph_model
 
     def get_best_channels(self, cluster_id):
         """Return the best channels of a given cluster."""
@@ -215,7 +222,10 @@ def template_gui(params_path, **kwargs):  # pragma: no cover
             max_n_spikes_per_template=500, max_n_channels=16)
 
     create_app()
-    controller = TemplateController(model=model, dir_path=dir_path, **kwargs)
+    controller = TemplateController(model=model, dir_path=dir_path, 
+        plugins=["GraphViewPlugin",
+                "UpdateGraphViewBtnPlugin"],
+        **kwargs)
     gui = controller.create_gui()
     gui.show()
     run_app()
