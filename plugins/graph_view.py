@@ -17,7 +17,7 @@ class GraphView(ManualClusteringView):
     def attach(self, gui):
         super(GraphView, self).attach(gui)
         on_update = partial(self.on_graph_update)
-        connect(on_update, event='update-graph')
+        connect(on_update, event='update-graph') # Todo: unconnect?
 
     def on_graph_update(self, state):
         data = self.graph_input()

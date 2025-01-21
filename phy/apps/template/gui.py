@@ -16,6 +16,7 @@ import numpy as np
 from phylib import _add_log_file
 from phylib.io.model import TemplateModel, load_model
 from phylib.io.graph_model import GraphModel
+from phylib.io.trigger_model import TriggerModel
 from phylib.io.traces import MtscompEphysReader
 from phylib.utils import Bunch, connect
 
@@ -93,8 +94,11 @@ class TemplateController(WaveformMixin, FeatureMixin, TemplateMixin, TraceMixin,
     def _create_model(self, dir_path=None, **kwargs):
         return TemplateModel(dir_path=dir_path, **kwargs)
     
-    def _create_graph_model(self, dir_path=None):
+    def _create_graph_model(self, dir_path):
         return GraphModel(dir_path=dir_path)
+    
+    def _create_trigger_model(self, dir_path):
+        return TriggerModel(dir_path=dir_path)
 
     def _set_supervisor(self):
         super(TemplateController, self)._set_supervisor()
@@ -224,7 +228,8 @@ def template_gui(params_path, **kwargs):  # pragma: no cover
     create_app()
     controller = TemplateController(model=model, dir_path=dir_path, 
         plugins=["GraphViewPlugin",
-                "UpdateGraphViewBtnPlugin"],
+                "UpdateGraphViewBtnPlugin",
+                "ExportPlotPlugin"],
         **kwargs)
     gui = controller.create_gui()
     gui.show()

@@ -40,6 +40,7 @@ from phy.utils.context import Context, _cache_methods
 from phy.utils.plugin import attach_plugins
 
 from plugins.graph_view import GraphViewPlugin, UpdateGraphViewBtnPlugin
+from plugins.export_plot import ExportPlotPlugin
 
 logger = logging.getLogger(__name__)
 
@@ -885,6 +886,8 @@ class BaseController(object):
 
         self.graph_model = self._create_graph_model(dir_path=dir_path) if load_graph else None
 
+        self.trigger_model = self._create_trigger_model(dir_path=dir_path)
+
         # Set up the cache.
         self._set_cache(clear_cache)
 
@@ -944,7 +947,11 @@ class BaseController(object):
     
     def _create_graph_model(self, dir_path=None):
         """Create a model containing graph data. Override if GraphViewPlugin is to be used"""
-        return None
+        pass
+
+    def _create_trigger_model(self, dir_path=None):
+        """Create phylib model containing trigger data"""
+        pass
 
     def _clear_cache(self):
         logger.warn("Deleting the cache directory %s.", self.cache_dir)
@@ -1025,7 +1032,7 @@ class BaseController(object):
             similarity=self.similarity_functions[self.similarity],
             new_cluster_id=new_cluster_id,
             context=self.context,
-            triggers=self.model.triggers
+            triggers=self.trigger_model.get_triggers()
         )
         # Load the non-group metadata from the model to the cluster_meta.
         for name in sorted(self.model.metadata):
@@ -1558,7 +1565,7 @@ class BaseController(object):
             # Collect trigger times from all selected triggers
             trigger_times = []
             for trigger_id in trigger_ids:
-                trigger_times.extend(self.model.triggers[trigger_id]["times"])
+                trigger_times.extend(self.trigger_model.get_triggers()[trigger_id]["times"])
             trigger_times = np.array(trigger_times)
         return trigger_times
 

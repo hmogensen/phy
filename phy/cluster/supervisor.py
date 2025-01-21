@@ -404,6 +404,12 @@ class TriggerView(Table):
             columns.remove('id')
         columns = ['id', 'name', 'n_triggers']
         sort = sort or ('name', 'asc')
+
+        # Convert name to print-friendly strings
+        for item in data:
+            if isinstance(item['name'], bytes):
+                item['name'] = item['name'].decode()
+
         self._init_table(columns=columns, data=data, sort=sort)
 
 # -----------------------------------------------------------------------------
