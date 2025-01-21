@@ -39,8 +39,7 @@ from phy.gui.widgets import IPythonView, Barrier
 from phy.utils.context import Context, _cache_methods
 from phy.utils.plugin import attach_plugins
 
-from plugins.graph_view import GraphViewPlugin
-from plugins.update_graph_view_btn import UpdateGraphViewBtnPlugin
+from plugins.graph_view import GraphViewPlugin, UpdateGraphViewBtnPlugin
 
 logger = logging.getLogger(__name__)
 
