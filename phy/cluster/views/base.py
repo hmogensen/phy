@@ -9,9 +9,12 @@
 
 from functools import partial
 import gc
+import json
 import logging
+import sys
 
 import numpy as np
+from PyQt5.QtWidgets import QFileDialog, QApplication
 
 from phylib.utils import Bunch, connect, unconnect, emit
 from phylib.utils.geometry import range_transform
@@ -71,6 +74,10 @@ class ManualClusteringView(object):
         self._lock = None
         self._closed = False
         self.cluster_ids = ()
+
+        #  = f'export-{cls.__name__.lower()}'
+        self.export_data_event_name = f"export-{self.__class__.__name__.lower()}"
+
 
         # Load default shortcuts, and override with any user shortcuts.
         self.shortcuts = self.default_shortcuts.copy()
@@ -303,6 +310,9 @@ class ManualClusteringView(object):
         def on_close(sender):
             gui.state.update_view_state(self, self.state)
 
+        on_export_plot = partial(self.export_plot)
+        connect(on_export_plot, event=self.export_data_event_name)
+
         # HACK: Fix bug on macOS where docked OpenGL widgets were not displayed at startup.
         self._set_floating = AsyncCaller(delay=5)
 
@@ -324,6 +334,31 @@ class ManualClusteringView(object):
     # -------------------------------------------------------------------------
     # Misc public methods
     # -------------------------------------------------------------------------
+
+    def export_plot(self, state):
+        filename, _ = QFileDialog.getSaveFileName(
+            caption="Save clusters",
+            filter="JSON files (*.json)"
+        )
+        if filename:
+            bunchs = self.get_clusters_data()
+            
+            # Convert NumPy arrays to lists in the bunches data
+            serializable_bunchs = []
+            for bunch in bunchs:
+                serializable_bunch = {}
+                for key, value in bunch.items():
+                    if isinstance(value, np.ndarray):
+                        serializable_bunch[key] = value.tolist()
+                    elif isinstance(value, tuple) and len(value) == 4:  # Handle RGBA color tuples
+                        serializable_bunch[key] = list(value)
+                    else:
+                        serializable_bunch[key] = value
+                serializable_bunchs.append(serializable_bunch)
+            
+            # Save to JSON file
+            with open(filename, 'w') as f:
+                json.dump(serializable_bunchs, f, indent=2)
 
     def toggle_auto_update(self, checked):
         """When on, the view is automatically updated when the cluster selection changes."""

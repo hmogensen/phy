@@ -1,9 +1,3 @@
-import numpy as np
-from functools import partial
-import sys
-from PyQt5.QtWidgets import QFileDialog, QApplication
-import json
-
 from .histogram import HistogramView, _compute_histogram, _first_not_null
 from phy.utils.color import selected_cluster_color
 from phylib.utils import Bunch, connect, unconnect, emit
@@ -50,8 +44,6 @@ class PeristimHistView(TriggerHistogramView):
     bin_unit = 'ms'  # user-provided bin values in milliseconds, but stored in seconds
     listen_to_triggers = True
 
-    export_data_event_name = 'export-plot-psth'
-
     default_shortcuts = {
         'change_window_size': 'ctrl+wheel',
     }
@@ -63,32 +55,3 @@ class PeristimHistView(TriggerHistogramView):
         'set_x_max (%s)' % bin_unit: '%smax' % alias_char,
     }
     
-    def attach(self, gui):
-        super(PeristimHistView, self).attach(gui)
-        on_export_plot = partial(self.export_plot)
-        connect(on_export_plot, event=self.export_data_event_name) # Todo: unconnect?
-
-    def export_plot(self, state):
-        filename, _ = QFileDialog.getSaveFileName(
-            caption="Save clusters",
-            filter="JSON files (*.json)"
-        )
-        if filename:
-            bunchs = self.get_clusters_data()
-            
-            # Convert NumPy arrays to lists in the bunches data
-            serializable_bunchs = []
-            for bunch in bunchs:
-                serializable_bunch = {}
-                for key, value in bunch.items():
-                    if isinstance(value, np.ndarray):
-                        serializable_bunch[key] = value.tolist()
-                    elif isinstance(value, tuple) and len(value) == 4:  # Handle RGBA color tuples
-                        serializable_bunch[key] = list(value)
-                    else:
-                        serializable_bunch[key] = value
-                serializable_bunchs.append(serializable_bunch)
-            
-            # Save to JSON file
-            with open(filename, 'w') as f:
-                json.dump(serializable_bunchs, f, indent=2)
