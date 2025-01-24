@@ -5,7 +5,7 @@ from phy.plot.plot import PlotCanvasMpl
 from functools import partial
 from phylib.utils import Bunch, connect, unconnect, emit
 from phy.cluster.views import ManualClusteringView 
-
+import scipy.sparse as sp
 
 class GraphView(ManualClusteringView):
     plot_canvas_class = PlotCanvasMpl
@@ -23,13 +23,28 @@ class GraphView(ManualClusteringView):
         data = self.graph_input()
         settings = data.params
 
-        abs_dist_mat = data.abs_dist_mat
-        rel_dist_mat = data.rel_dist_mat
         template_amp_channels = data.template_amp_channels
         template_units = data.template_units
         template_batch_nr = data.template_batch_nr
         template_amplitudes = data.template_amplitudes
         template_clusters = data.template_clusters
+        n_templates = len(template_amplitudes)
+
+        # Load sparse matrices
+        abs_dist_data = np.load(settings["fname_abs_dist_sparse"])
+        rel_dist_data = np.load(settings["fname_rel_dist_sparse"])
+        rows = np.load(settings["fname_rows_dist_indx"])
+        cols = np.load(settings["fname_cols_dist_indx"])
+
+        assert abs_dist_data.shape == rel_dist_data.shape
+        assert len(rows) == len(cols)
+
+        abs_dist_mat = sp.coo_matrix((abs_dist_data, (rows, cols)), shape=(n_templates, n_templates))
+        rel_dist_mat = sp.coo_matrix((rel_dist_data, (rows, cols)), shape=(n_templates, n_templates))
+
+        # Convert to CSR format for efficient indexing
+        abs_dist_mat = abs_dist_mat.tocsr()
+        rel_dist_mat = rel_dist_mat.tocsr()        
 
         ch_window_width = settings['ch_window_width']
         unit_thr = settings['unit_thr']
@@ -45,12 +60,16 @@ class GraphView(ManualClusteringView):
 
         if template_clusters is None:
             template_clusters = np.arange(template_units.size)
+
+        indx = np.where((template_units > unit_thr) & (template_amplitudes > height_thr))[0]
         
-        indices = np.where((template_units > unit_thr) & (template_amplitudes > height_thr))[0]
-        p = np.argwhere((abs_dist_mat[indices][:, indices] > 0) & 
-                        (((abs_dist_mat[indices][:, indices] < abs_dist_thr)) 
-                         | (rel_dist_mat[indices][:, indices] < rel_dist_thr)))
-        p = indices[p]
+        abs_dist_mat_condensed = abs_dist_mat[indx][:, indx].todense()
+        rel_dist_mat_condensed = rel_dist_mat[indx][:, indx].todense()
+
+        p = np.argwhere((abs_dist_mat_condensed > 0) & 
+                        (((abs_dist_mat_condensed < abs_dist_thr)) 
+                         | (rel_dist_mat_condensed < rel_dist_thr)))
+        p = indx[p]
         
         ga = nx.Graph()
         for i in range(p.shape[0]):
