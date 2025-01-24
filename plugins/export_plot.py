@@ -9,6 +9,6 @@ class ExportPlotPlugin(IPlugin):
         @connect
         def on_view_attached(view, gui):
             if isinstance(view, PeristimHistView):
-                @view.dock.add_button(icon='f105') # TODO: Change to suitable icon
+                @view.dock.add_button(icon='f0c7')
                 def export_plot(checked):
                     emit(view.export_data_event_name, self)
