@@ -1,4 +1,4 @@
-# INSTALLATION INSTRUCTIONS
+## INSTALLATION
 
 To install this version of the project, do the following (optionally after creating a new conda environment)
 
@@ -14,14 +14,14 @@ cd phylib
 pip install -e . --upgrade
 ```
 
-# COMMANDS
+## COMMANDS
 
 Add customized graph window
 ```
 phy template-gui params.py --load-graph
 ```
 
-# TROUBLESHOOTING
+## TROUBLESHOOTING
 
 Clear cache
 ```
@@ -37,6 +37,3 @@ Print debug log
 ```
 phy template-gui params.py --debug
 ```
-
-
-

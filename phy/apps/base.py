@@ -857,7 +857,7 @@ class BaseController(object):
     # Views to load by default.
     _new_views = (
         'ClusterScatterView', 'CorrelogramView', 'AmplitudeView',
-        'ISIView', 'FiringRateView', 'ProbeView', 'PeristimHistView'
+        'ISIView', 'FiringRateView', 'ProbeView', # 'PeristimHistView'
     )
 
     default_shortcuts = {
