@@ -37,3 +37,5 @@ Print debug log
 ```
 phy template-gui params.py --debug
 ```
+
+Feel free to report bugs or suggest features [here](https://github.com/Neural-basis-of-sensorimotor-control/spike_sorting_hlt/issues)

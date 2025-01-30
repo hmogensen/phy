@@ -857,7 +857,7 @@ class BaseController(object):
     # Views to load by default.
     _new_views = (
         'ClusterScatterView', 'CorrelogramView', 'AmplitudeView',
-        'ISIView', 'FiringRateView', 'ProbeView', # 'PeristimHistView'
+        'ISIView', 'FiringRateView', 'ProbeView', 'PeristimHistView'
     )
 
     default_shortcuts = {
@@ -986,7 +986,7 @@ class BaseController(object):
             'CorrelogramView': self.create_correlogram_view,
             'ISIView': self._make_histogram_view(ISIView, self._get_isi),
             'FiringRateView': self._make_histogram_view(FiringRateView, self._get_firing_rate),
-            'PeristimHistView': self._make_trigger_histogram_view(PeristimHistView, self._get_peristim_hist, self._get_trigger_times),
+             'PeristimHistView': self._make_trigger_histogram_view(PeristimHistView, self._get_peristim_hist, self._get_trigger_times),
             'AmplitudeView': self.create_amplitude_view,
             'ProbeView': self.create_probe_view,
             'RasterView': self.create_raster_view,
