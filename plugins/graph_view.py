@@ -20,8 +20,9 @@ class GraphView(ManualClusteringView):
         connect(on_update, event='update-graph') # Todo: unconnect?
 
     def on_graph_update(self, state):
-        data = self.graph_input()
-        settings = data.params
+        data, params = self.graph_input()
+
+        print(params)
 
         template_amp_channels = data.template_amp_channels
         template_units = data.template_units
@@ -31,10 +32,10 @@ class GraphView(ManualClusteringView):
         n_templates = len(template_amplitudes)
 
         # Load sparse matrices
-        abs_dist_data = np.load(settings["fname_abs_dist_sparse"])
-        rel_dist_data = np.load(settings["fname_rel_dist_sparse"])
-        rows = np.load(settings["fname_rows_dist_indx"])
-        cols = np.load(settings["fname_cols_dist_indx"])
+        abs_dist_data = data.abs_dist_sparse
+        rel_dist_data = data.rel_dist_sparse
+        rows = data.row_dist_indx
+        cols = data.col_dist_indx
 
         assert abs_dist_data.shape == rel_dist_data.shape
         assert len(rows) == len(cols)
@@ -46,12 +47,12 @@ class GraphView(ManualClusteringView):
         abs_dist_mat = abs_dist_mat.tocsr()
         rel_dist_mat = rel_dist_mat.tocsr()        
 
-        ch_window_width = settings['ch_window_width']
-        unit_thr = settings['unit_thr']
-        height_thr = settings['height_thr']
-        abs_dist_thr = settings['abs_dist_thr']
-        rel_dist_thr = settings['rel_dist_thr']
-        batch_delay_thr = settings['batch_delay_thr']
+        ch_window_width = params.ch_window_width
+        unit_thr = params.tempclust.unit_thr
+        height_thr = params.tempclust.height_thr
+        abs_dist_thr = params.tempclust.abs_dist_thr
+        rel_dist_thr = params.tempclust.rel_dist_thr
+        batch_delay_thr = params.tempclust.batch_delay_thr
 
         n_batches = len(template_amplitudes)
 

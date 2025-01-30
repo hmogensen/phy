@@ -17,6 +17,7 @@ from phylib import _add_log_file
 from phylib.io.model import TemplateModel, load_model
 from phylib.io.graph_model import GraphModel
 from phylib.io.trigger_model import TriggerModel
+from phylib.io.sc_params import ScParams
 from phylib.io.traces import MtscompEphysReader
 from phylib.utils import Bunch, connect
 
@@ -99,6 +100,10 @@ class TemplateController(WaveformMixin, FeatureMixin, TemplateMixin, TraceMixin,
     
     def _create_trigger_model(self, dir_path):
         return TriggerModel(dir_path=dir_path)
+    
+    def _create_sc_params(self, dir_path):
+        print("TemplateController._create_sc_params")
+        return ScParams(dir_path=dir_path)
 
     def _set_supervisor(self):
         super(TemplateController, self)._set_supervisor()
@@ -155,7 +160,7 @@ class TemplateController(WaveformMixin, FeatureMixin, TemplateMixin, TraceMixin,
     # -------------------------------------------------------------------------
 
     def get_graph_data(self):
-        return self.graph_model
+        return self.graph_model, self.sc_params
 
     def get_best_channels(self, cluster_id):
         """Return the best channels of a given cluster."""

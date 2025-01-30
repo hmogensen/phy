@@ -888,6 +888,9 @@ class BaseController(object):
 
         self.trigger_model = self._create_trigger_model(dir_path=dir_path)
 
+        print("self.sc_params = self._create_sc_params(dir_path=dir_path) if load_graph else None")
+        self.sc_params = self._create_sc_params(dir_path=dir_path) if load_graph else None
+
         # Set up the cache.
         self._set_cache(clear_cache)
 
@@ -953,6 +956,11 @@ class BaseController(object):
         """Create phylib model containing trigger data"""
         pass
 
+    def _create_sc_params(self, dir_path=None):
+        """Create structure containing parameter data from sc-sort"""
+        print("BaseController._create_sc_params")
+        pass
+
     def _clear_cache(self):
         logger.warn("Deleting the cache directory %s.", self.cache_dir)
         shutil.rmtree(self.cache_dir, ignore_errors=True)
@@ -986,7 +994,7 @@ class BaseController(object):
             'CorrelogramView': self.create_correlogram_view,
             'ISIView': self._make_histogram_view(ISIView, self._get_isi),
             'FiringRateView': self._make_histogram_view(FiringRateView, self._get_firing_rate),
-             'PeristimHistView': self._make_trigger_histogram_view(PeristimHistView, self._get_peristim_hist, self._get_trigger_times),
+            'PeristimHistView': self._make_trigger_histogram_view(PeristimHistView, self._get_peristim_hist, self._get_trigger_times),
             'AmplitudeView': self.create_amplitude_view,
             'ProbeView': self.create_probe_view,
             'RasterView': self.create_raster_view,

@@ -78,7 +78,6 @@ class ManualClusteringView(object):
         #  = f'export-{cls.__name__.lower()}'
         self.export_data_event_name = f"export-{self.__class__.__name__.lower()}"
 
-
         # Load default shortcuts, and override with any user shortcuts.
         self.shortcuts = self.default_shortcuts.copy()
         self.shortcuts.update(shortcuts or {})
