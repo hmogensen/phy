@@ -52,6 +52,31 @@ def _try_get_opengl_canvas(view):
         return QWidget.createWindowContainer(view.canvas)
     return view
 
+def _try_get_q_frame(view):
+    from PyQt5.QtWidgets import QFrame
+    if isinstance(view, QFrame):
+        # Create a new frame that inherits properties of the input view
+        frame = QFrame()
+        
+        # Copy relevant frame properties
+        frame.setFrameShape(view.frameShape())
+        frame.setFrameShadow(view.frameShadow())
+        frame.setLineWidth(view.lineWidth())
+        frame.setMidLineWidth(view.midLineWidth())
+        
+        # Copy any layout if it exists
+        if view.layout():
+            frame.setLayout(view.layout())
+        
+        # Copy size policies
+        frame.setSizePolicy(view.sizePolicy())
+        
+        # Copy minimum and maximum sizes if set
+        frame.setMinimumSize(view.minimumSize())
+        frame.setMaximumSize(view.maximumSize())
+        
+        return frame
+    return view
 
 def _widget_position(widget):  # pragma: no cover
     return widget.parentWidget().mapToGlobal(widget.geometry().topLeft())
@@ -724,6 +749,7 @@ class GUI(QMainWindow):
         # Get the Qt canvas for matplotlib/OpenGL views.
         widget = _try_get_matplotlib_canvas(view)
         widget = _try_get_opengl_canvas(widget)
+        widget = _try_get_q_frame(widget)
 
         dock = _create_dock_widget(widget, name, closable=closable, floatable=floatable)
         self.addDockWidget(_get_dock_position(position), dock, Qt.Horizontal)

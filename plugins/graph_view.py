@@ -6,6 +6,7 @@ from functools import partial
 from phylib.utils import Bunch, connect, unconnect, emit
 from phy.cluster.views import ManualClusteringView 
 import scipy.sparse as sp
+import traceback
 
 class GraphView(ManualClusteringView):
     plot_canvas_class = PlotCanvasMpl

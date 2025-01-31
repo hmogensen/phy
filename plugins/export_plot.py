@@ -1,7 +1,6 @@
 from phy import IPlugin, connect
 from phy.cluster.views import WaveformView
 from phylib.utils import Bunch, connect, unconnect, emit
-from plugins.graph_view import GraphView
 from phy.cluster.views.base import ManualClusteringView
 
 class ExportPlotPlugin(IPlugin):

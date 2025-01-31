@@ -76,6 +76,7 @@ class TemplateController(WaveformMixin, FeatureMixin, TemplateMixin, TraceMixin,
         'AmplitudeView',
         'FiringRateView',
         'PeristimHistView',
+        'MergeTemplateView',
         'TraceView',
         'ProbeView',
         'TemplateFeatureView',
@@ -234,7 +235,8 @@ def template_gui(params_path, **kwargs):  # pragma: no cover
     controller = TemplateController(model=model, dir_path=dir_path, 
         plugins=["GraphViewPlugin",
                 "UpdateGraphViewBtnPlugin",
-                "ExportPlotPlugin"],
+                "ExportPlotPlugin",
+                "MergeTemplateViewPlugin",],
         **kwargs)
     gui = controller.create_gui()
     gui.show()

@@ -41,6 +41,7 @@ from phy.utils.plugin import attach_plugins
 
 from plugins.graph_view import GraphViewPlugin, UpdateGraphViewBtnPlugin
 from plugins.export_plot import ExportPlotPlugin
+from plugins.merge_template_view import MergeTemplateView
 
 logger = logging.getLogger(__name__)
 
@@ -888,7 +889,6 @@ class BaseController(object):
 
         self.trigger_model = self._create_trigger_model(dir_path=dir_path)
 
-        print("self.sc_params = self._create_sc_params(dir_path=dir_path) if load_graph else None")
         self.sc_params = self._create_sc_params(dir_path=dir_path) if load_graph else None
 
         # Set up the cache.
