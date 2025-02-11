@@ -22,9 +22,6 @@ class GraphView(ManualClusteringView):
 
     def on_graph_update(self, state):
         data, params = self.graph_input()
-
-        print(params)
-
         template_amp_channels = data.template_amp_channels
         template_units = data.template_units
         template_batch_nr = data.template_batch_nr

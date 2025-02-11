@@ -495,6 +495,8 @@ class Table(HTMLWidget):
         rows directly in the HTML view.
 
         """
+        import traceback
+        print(''.join(traceback.format_stack()))
         ids = _uniq(ids)
         assert all(_is_integer(_) for _ in ids)
         self.eval_js('table.select({}, {});'.format(dumps(ids), dumps(kwargs)), callback=callback)
