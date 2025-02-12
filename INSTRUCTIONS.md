@@ -16,7 +16,7 @@ pip install -e . --upgrade
 
 ## COMMANDS
 
-Add customized graph window
+Load customized files from sc-sort
 ```
 phy template-gui params.py --load-graph
 ```
