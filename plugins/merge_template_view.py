@@ -80,7 +80,7 @@ class MergeTemplateView(QWidget):
         self.list_view.setSelectionMode(QListView.ExtendedSelection)
         self.list_view.setSelectionBehavior(QTableView.SelectRows)
         
-        self.merge_button.clicked.connect(self.merge_templates)
+        self.merge_button.clicked.connect(self.merge_action)
         self.unmerge_button.clicked.connect(self.unmerge_cluster)
         self.list_view.selectionModel().selectionChanged.connect(self.update_merge_buttons)        
 
@@ -104,18 +104,34 @@ class MergeTemplateView(QWidget):
         self.update_plot()
 
     
-    def merge_templates(self):
+    def merge_action(self):
         selected_indexes = self.list_view.selectionModel().selectedIndexes()
         selected_rows = sorted(set(index.row() for index in selected_indexes))
-        selected_tc_ids = [self.model.item(row, 0).text() for row in selected_rows]
-        print("Merge template cluster IDs:", selected_tc_ids)
-
+        merge_clusters = [int(self.model.item(row, 0).text()) for row in selected_rows]
+        template_clusters = self.controller.graph_model.template_clusters.copy()
+        min_cluster = min(merge_clusters)
+        for cluster in merge_clusters:
+            template_clusters[template_clusters == min_cluster] = min_cluster
+        unique_clusters = np.unique(template_clusters)
+        mapping = {old: new for new, old in enumerate(unique_clusters)}
+        for old, new in mapping.items():
+            template_clusters[template_clusters == old] = new
+        self.controller.graph_model.set_template_clusters(template_clusters)  
+        
     def unmerge_cluster(self):
-        selected_indexes = self.list_view.selectionModel().selectedIndexes()
-        if selected_indexes:
-            row = selected_indexes[0].row()
-            tc_id = self.model.item(row, 0).text()
-            print("Unmerge template cluster ID:", tc_id)
+        selected_index = self.list_view.selectionModel().selectedIndexes()
+        unmerge_cluster = [int(self.model.item(row, 0).text()) for row in selected_index]
+        assert len(unmerge_cluster) == 1 # Can be modified to allow for selecting and unmerging several 
+                                         # templates at the same time. In this case also change setEnabled state 
+                                         # in callback update_merge_buttons
+        template_clusters = self.controller.graph_model.template_clusters.copy()
+        unmerge_cluster_indx = np.where(template_clusters == unmerge_cluster)[0]
+        shift_cluster_indx = template_clusters > unmerge_cluster
+        template_clusters[shift_cluster_indx] += len(unmerge_cluster_indx) - 1
+        
+        for i, indx in enumerate(unmerge_cluster_indx, start=1):
+            template_clusters[indx] = unmerge_cluster + i
+        self.controller.graph_model.set_template_clusters(template_clusters)
 
     def update_plot(self):
         self.plot_canvas.axes.clear()

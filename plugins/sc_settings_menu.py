@@ -20,3 +20,13 @@ class ScSettingsMenuPlugin(IPlugin):
                 if updated_params := _edit_parameters(params):
                     for key in updated_params:
                         params[key] = updated_params[key]
+            @gui.file_actions.add()
+            def backup_sc_params():
+                print("Save toml file to new place / with new name")
+            @gui.file_actions.add()
+            def save_project_to_new_directory():
+                print("save files to new directory")
+                print("restart phy in new directory")
+            @gui.file_actions.add()
+            def rerun_sc_sort():
+                print("Choose menu with selection (new output dir, etc)")
