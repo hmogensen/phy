@@ -236,7 +236,8 @@ def template_gui(params_path, **kwargs):  # pragma: no cover
         plugins=["GraphViewPlugin",
                 "UpdateGraphViewBtnPlugin",
                 "ExportPlotPlugin",
-                "MergeTemplateViewPlugin",],
+                "MergeTemplateViewPlugin",
+                "ScSettingsMenuPlugin",],
         **kwargs)
     gui = controller.create_gui()
     gui.show()

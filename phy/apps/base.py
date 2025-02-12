@@ -42,6 +42,7 @@ from phy.utils.plugin import attach_plugins
 from plugins.graph_view import GraphViewPlugin, UpdateGraphViewBtnPlugin
 from plugins.export_plot import ExportPlotPlugin
 from plugins.merge_template_view import MergeTemplateView
+from plugins.sc_settings_menu import ScSettingsMenuPlugin
 
 logger = logging.getLogger(__name__)
 
