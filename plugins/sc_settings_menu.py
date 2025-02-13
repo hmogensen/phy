@@ -6,6 +6,8 @@ import shutil
 from pathlib import Path
 import numpy as np
 from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QDialog, QGridLayout, QLabel, QComboBox, QPushButton
+
 
 from phy import IPlugin, connect
 from phylib.io.sc_params_dialog import ScParamsDialog
@@ -40,6 +42,56 @@ def copy_files(source_dir, dest_dir):
                 dest_path = os.path.join(dest_dir, filepath.name)
                 shutil.copy2(filepath, dest_path)
 
+class RunScDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Workflow Selection")
+        
+        layout = QGridLayout()
+        self.workflow_steps = ["spike-detection", "template-generation", 
+                             "template-merging", "save-to-phy"]
+        
+        start_label = QLabel("Start point:")
+        self.start_combo = QComboBox()
+        self.start_combo.addItems(self.workflow_steps)
+        self.start_combo.setCurrentText("template-merging")
+        
+        end_label = QLabel("End point:")
+        self.end_combo = QComboBox()
+        self.end_combo.addItems(self.workflow_steps)
+        self.end_combo.setCurrentText("save-to-phy")
+        
+        run_button = QPushButton("Run")
+        cancel_button = QPushButton("Cancel")
+        
+        layout.addWidget(start_label, 0, 0)
+        layout.addWidget(self.start_combo, 0, 1)
+        layout.addWidget(end_label, 1, 0)
+        layout.addWidget(self.end_combo, 1, 1)
+        layout.addWidget(run_button, 2, 0)
+        layout.addWidget(cancel_button, 2, 1)
+        
+        self.start_combo.currentIndexChanged.connect(self.update_end_combo)
+        self.end_combo.currentIndexChanged.connect(self.update_start_combo)
+        run_button.clicked.connect(self.accept)
+        cancel_button.clicked.connect(self.reject)
+        
+        self.setLayout(layout)
+    
+    def update_end_combo(self):
+        start_idx = self.workflow_steps.index(self.start_combo.currentText())
+        end_idx = self.workflow_steps.index(self.end_combo.currentText())
+        
+        if start_idx > end_idx:
+            self.end_combo.setCurrentText("save-to-phy")
+
+    def update_start_combo(self):
+        start_idx = self.workflow_steps.index(self.start_combo.currentText())
+        end_idx = self.workflow_steps.index(self.end_combo.currentText())
+        
+        if start_idx > end_idx:
+            self.start_combo.setCurrentText(self.end_combo.currentText())
+
 # Close all data files so the won't be locked from access by other applications
 def close_all_open_files():
     for obj in gc.get_objects():
@@ -71,10 +123,16 @@ class ScSettingsMenuPlugin(IPlugin):
 
             @gui.file_actions.add(toolbar=True)
             def run_sc_sort():
+
+                dialog = RunScDialog()  # Replace your_window with your main window instance
+                if dialog.exec_():
+                    start_point = dialog.start_combo.currentText()
+                    end_point = dialog.end_combo.currentText()
+                else:
+                    return
+                    
                 close_all_open_files()
 
-                start_point = "spike-detection"
-                end_point = "save-to-phy"
                 params = controller.sc_params
                 
                 script_dir = os.path.dirname(params.main.script_path)
