@@ -871,7 +871,7 @@ class BaseController(object):
     def __init__(
             self, dir_path=None, config_dir=None, model=None,
             clear_cache=None, clear_state=None,
-            enable_threading=True, load_graph=None,
+            enable_threading=True, load_graph=None, load_trigger=None,
             **kwargs):
 
         self._enable_threading = enable_threading
@@ -888,7 +888,7 @@ class BaseController(object):
 
         self.graph_model = self._create_graph_model(dir_path=dir_path) if load_graph else None
 
-        self.trigger_model = self._create_trigger_model(dir_path=dir_path)
+        self.trigger_model = self._create_trigger_model(dir_path=dir_path) if load_trigger else None
 
         self.sc_params = self._create_sc_params(dir_path=dir_path) if load_graph else None
 

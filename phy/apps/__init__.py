@@ -128,6 +128,17 @@ def _load_graph_flag(f):
     return f
 
 #------------------------------------------------------------------------------
+# View trigger view flag
+#------------------------------------------------------------------------------
+def _load_triggers_flag(f):
+    f = click.option(
+        '--load-triggers/--no-load-triggers', default=False,
+        help="View trigger view in phy"
+    )(f)
+    return f
+
+
+#------------------------------------------------------------------------------
 # Raw data GUI
 #------------------------------------------------------------------------------
 
@@ -157,6 +168,7 @@ def cli_trace_gui(ctx, dat_path, **kwargs):
 @click.argument('params-path', type=click.Path(exists=True))
 @_gui_command
 @_load_graph_flag
+@_load_triggers_flag
 @click.pass_context
 def cli_template_gui(ctx, params_path, **kwargs):
     """Launch the template GUI on a params.py file."""

@@ -792,13 +792,14 @@ class Supervisor(object):
         connect(self._similar_selected, event='select', sender=self.similarity_view)
 
         # Create the trigger view
-        self.trigger_view = TriggerView(
-            gui,
-            data=[self.get_trigger_info(i) for i in self.triggers],
-            columns=['id', 'name', 'n_triggers'],
-            sort=('name', 'asc')
-        )
-        connect(self._triggers_selected, event='select', sender=self.trigger_view)
+        if self.triggers:
+            self.trigger_view = TriggerView(
+                gui,
+                data=[self.get_trigger_info(i) for i in self.triggers],
+                columns=['id', 'name', 'n_triggers'],
+                sort=('name', 'asc')
+            )
+            connect(self._triggers_selected, event='select', sender=self.trigger_view)
 
         # Change the state after every clustering action, according to the action flow.
         connect(self._after_action, event='cluster', sender=self)
@@ -1008,7 +1009,8 @@ class Supervisor(object):
         connect(self._save_gui_state, event='close', sender=gui)
         gui.add_view(self.cluster_view, position='left', closable=False)
         gui.add_view(self.similarity_view, position='left', closable=False)
-        gui.add_view(self.trigger_view, position='left', closable=False)
+        if self.trigger_view:
+            gui.add_view(self.trigger_view, position='left', closable=False)
 
         # Create all supervisor actions (edit and view menu).
         self.action_creator.attach(gui)
