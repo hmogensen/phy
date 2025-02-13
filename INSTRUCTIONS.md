@@ -21,6 +21,11 @@ Load customized files from sc-sort
 phy template-gui params.py --load-graph
 ```
 
+Show trigger view (only displays if there are triggers in data set)
+```
+phy template-gui params.py --load-triggers
+```
+
 ## TROUBLESHOOTING
 
 Clear cache

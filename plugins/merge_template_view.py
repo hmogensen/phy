@@ -10,6 +10,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.cm import rainbow
 
+_N_COLUMNS = 3
+
 class PlotCanvas(FigureCanvas):
     def __init__(self, parent=None, width=4, height=4):
         fig = Figure(figsize=(width, height))
@@ -31,8 +33,12 @@ class MergeTemplateView(QWidget):
         self.controller = controller
         self._init_ui()
 
+
+    def _clear_table(self):
+        self.model.removeRows(0, self.model.rowCount())
+
+
     def _reload_table(self):
-        #cluster_info = self.controller.supervisor.cluster_info.copy()
         spike_templates = self.controller.model.spike_templates
         unique_templates = np.unique(spike_templates[spike_templates > 0])
         template_clusters = self.controller.graph_model.template_clusters
@@ -40,7 +46,7 @@ class MergeTemplateView(QWidget):
 
         unique_template_clusters = np.unique(template_clusters)
         for tc in unique_template_clusters:   
-            indx = np.nonzero(tc == template_clusters)
+            indx = np.nonzero(tc == template_clusters)[0]
             n_templates = len(indx)
             assert n_templates > 0
             n_spikes = 0
@@ -52,7 +58,9 @@ class MergeTemplateView(QWidget):
                 QStandardItem(str(n_templates)),
                 QStandardItem(str(n_spikes))
             ]
+            assert len(row_items) == _N_COLUMNS
             self.model.appendRow(row_items)
+
 
     def _init_ui(self):
         main_layout = QHBoxLayout()
@@ -99,39 +107,47 @@ class MergeTemplateView(QWidget):
 
     def update_merge_buttons(self):
         selected_indexes = self.list_view.selectionModel().selectedIndexes()
-        self.merge_button.setEnabled(len(selected_indexes) >= 2)
-        self.unmerge_button.setEnabled(len(selected_indexes) == 1)
+        n_rows = len(selected_indexes)/_N_COLUMNS
+        self.merge_button.setEnabled(n_rows >= 2)
+        self.unmerge_button.setEnabled(n_rows == 1)
         self.update_plot()
 
     
     def merge_action(self):
-        selected_indexes = self.list_view.selectionModel().selectedIndexes()
-        selected_rows = sorted(set(index.row() for index in selected_indexes))
+        selected_indx = self.list_view.selectionModel().selectedIndexes()
+        selected_rows = sorted(set(index.row() for index in selected_indx))
         merge_clusters = [int(self.model.item(row, 0).text()) for row in selected_rows]
         template_clusters = self.controller.graph_model.template_clusters.copy()
         min_cluster = min(merge_clusters)
         for cluster in merge_clusters:
-            template_clusters[template_clusters == min_cluster] = min_cluster
+            template_clusters[template_clusters == cluster] = min_cluster
         unique_clusters = np.unique(template_clusters)
         mapping = {old: new for new, old in enumerate(unique_clusters)}
         for old, new in mapping.items():
             template_clusters[template_clusters == old] = new
-        self.controller.graph_model.set_template_clusters(template_clusters)  
-        
+        self.controller.graph_model.set_template_clusters(template_clusters)
+        self._clear_table()
+        self._reload_table()
+ 
+
     def unmerge_cluster(self):
-        selected_index = self.list_view.selectionModel().selectedIndexes()
-        unmerge_cluster = [int(self.model.item(row, 0).text()) for row in selected_index]
-        assert len(unmerge_cluster) == 1 # Can be modified to allow for selecting and unmerging several 
+        selected_indx = self.list_view.selectionModel().selectedIndexes()
+        selected_rows = sorted(set(index.row() for index in selected_indx))
+        unmerge_cluster_row = [int(self.model.item(row, 0).text()) for row in selected_rows]
+        assert len(unmerge_cluster_row) == 1 # Can be modified to allow for selecting and unmerging several 
                                          # templates at the same time. In this case also change setEnabled state 
                                          # in callback update_merge_buttons
+        unmerge_cluster_row = unmerge_cluster_row[0]
         template_clusters = self.controller.graph_model.template_clusters.copy()
-        unmerge_cluster_indx = np.where(template_clusters == unmerge_cluster)[0]
-        shift_cluster_indx = template_clusters > unmerge_cluster
-        template_clusters[shift_cluster_indx] += len(unmerge_cluster_indx) - 1
-        
-        for i, indx in enumerate(unmerge_cluster_indx, start=1):
-            template_clusters[indx] = unmerge_cluster + i
+        unmerge_template_indx = np.where(template_clusters == unmerge_cluster_row)[0]
+        shift_template_indx = template_clusters > unmerge_cluster_row
+        template_clusters[shift_template_indx] += len(unmerge_template_indx)
+        for i, indx in enumerate(unmerge_template_indx, start=1):
+            template_clusters[indx] = unmerge_cluster_row + i
         self.controller.graph_model.set_template_clusters(template_clusters)
+        self._clear_table()
+        self._reload_table()
+
 
     def update_plot(self):
         self.plot_canvas.axes.clear()
@@ -158,6 +174,7 @@ class MergeTemplateView(QWidget):
                     self.plot_canvas.axes.plot(y, color=color)
         self.plot_canvas.axes.grid(True)
         self.plot_canvas.draw()
+
 
 class MergeTemplateViewPlugin(IPlugin):
     def attach_to_controller(self, controller):
