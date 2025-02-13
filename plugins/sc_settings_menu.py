@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtWidgets import QDialog, QGridLayout, QLabel, QComboBox, QPushButton
-
+import tomli, tomli_w
 
 from phy import IPlugin, connect
 from phylib.io.sc_params_dialog import ScParamsDialog
@@ -18,6 +18,7 @@ def _edit_parameters(params:ScParams):
     if accepted:
         return updated_params
     return None
+
 
 def select_or_create_folder():
     folder_path = QFileDialog.getExistingDirectory(
@@ -32,15 +33,34 @@ def select_or_create_folder():
     
     return None
 
+def update_toml_paths(source_dir, dest_dir):
+    with open(source_dir + "/sc_params.toml", 'r') as f:
+        content = f.read()
+    
+    config = tomli.loads(content)
+    
+    # Update the paths
+    config['output_dir'] = os.path.basename(dest_dir)
+    if 'phy_cluster_file' in config:
+        config['phy_cluster_file'] = os.path.join(
+            config['output_dir'],
+            os.path.basename(config['phy_cluster_file'])
+        )
+    
+    with open(dest_dir + "/sc_params.toml", 'wb') as f:
+        tomli_w.dump(config, f)
+
+
 def copy_files(source_dir, dest_dir):
     Path(dest_dir).mkdir(parents=True, exist_ok=True)    
-    patterns = ['*.npy', '*.toml', '*.toml.backup']
+    patterns = ['*.npy']
     
     for root, _, files in os.walk(source_dir):
         for pattern in patterns:
             for filepath in Path(source_dir).glob(pattern):
                 dest_path = os.path.join(dest_dir, filepath.name)
                 shutil.copy2(filepath, dest_path)
+
 
 class RunScDialog(QDialog):
     def __init__(self, parent=None):
@@ -78,6 +98,7 @@ class RunScDialog(QDialog):
         
         self.setLayout(layout)
     
+
     def update_end_combo(self):
         start_idx = self.workflow_steps.index(self.start_combo.currentText())
         end_idx = self.workflow_steps.index(self.end_combo.currentText())
@@ -85,12 +106,14 @@ class RunScDialog(QDialog):
         if start_idx > end_idx:
             self.end_combo.setCurrentText("save-to-phy")
 
+
     def update_start_combo(self):
         start_idx = self.workflow_steps.index(self.start_combo.currentText())
         end_idx = self.workflow_steps.index(self.end_combo.currentText())
         
         if start_idx > end_idx:
             self.start_combo.setCurrentText(self.end_combo.currentText())
+
 
 # Close all data files so the won't be locked from access by other applications
 def close_all_open_files():
@@ -100,6 +123,7 @@ def close_all_open_files():
                 obj._mmap.close()
             except Exception as e:
                 print(f"Failed to close {obj._mmap.filename}: {e}")
+
 
 class ScSettingsMenuPlugin(IPlugin):
     def attach_to_controller(self, controller):
@@ -120,6 +144,7 @@ class ScSettingsMenuPlugin(IPlugin):
                 new_folder_path = select_or_create_folder()
                 if new_folder_path:
                     copy_files(abs_folder_path, new_folder_path)
+                    update_toml_paths(abs_folder_path, new_folder_path)
 
             @gui.file_actions.add(toolbar=True)
             def run_sc_sort():
@@ -142,7 +167,7 @@ class ScSettingsMenuPlugin(IPlugin):
                 start_time_s = str(int(params.main.frame_window_start / 30_000))
                 t_duration_s = str(int(params.main.n_tot_frames/30_000))
 
-                # Set numnber of threads
+                # Set number of threads
                 os.environ["JULIA_NUM_THREADS"] = n_threads
 
                 # Because -l flag is enabled, all parameters in params object will be 

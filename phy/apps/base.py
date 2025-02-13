@@ -1041,7 +1041,7 @@ class BaseController(object):
             similarity=self.similarity_functions[self.similarity],
             new_cluster_id=new_cluster_id,
             context=self.context,
-            triggers=self.trigger_model.get_triggers()
+            triggers=self.trigger_model.get_triggers() if self.trigger_model else None
         )
         # Load the non-group metadata from the model to the cluster_meta.
         for name in sorted(self.model.metadata):

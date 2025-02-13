@@ -800,6 +800,8 @@ class Supervisor(object):
                 sort=('name', 'asc')
             )
             connect(self._triggers_selected, event='select', sender=self.trigger_view)
+        else:
+            self.trigger_view = None
 
         # Change the state after every clustering action, according to the action flow.
         connect(self._after_action, event='cluster', sender=self)
@@ -879,7 +881,7 @@ class Supervisor(object):
 
     def _triggers_selected(self, sender, obj):
         """When triggers are selected in the trigger view."""
-        if sender != self.trigger_view:
+        if not self.trigger_view or (sender != self.trigger_view):
             return
         self._selected_triggers = obj['selected']
         trigger_ids = obj['selected'] 
