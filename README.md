@@ -1,3 +1,5 @@
+NB: THIS FILE IS KEPT FOR REFERENCE. TO INSTALL FORKED VERSION, SEE INSTRUCTIONS.md FILE
+
 # phy: interactive visualization and manual spike sorting of large-scale ephys data
 
 [![Install and Test with Pip](https://github.com/cortex-lab/phy/actions/workflows/python-test.yml/badge.svg)](https://github.com/cortex-lab/phy/actions/workflows/python-test.yml)

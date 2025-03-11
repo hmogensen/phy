@@ -871,10 +871,11 @@ class BaseController(object):
     def __init__(
             self, dir_path=None, config_dir=None, model=None,
             clear_cache=None, clear_state=None,
-            enable_threading=True, load_graph=None, load_trigger=None,
+            enable_threading=True, load_graph=False, load_triggers=False,
             **kwargs):
 
         self._enable_threading = enable_threading
+        self.load_graph = load_graph
 
         assert dir_path
         self.dir_path = Path(dir_path).resolve()
@@ -888,7 +889,7 @@ class BaseController(object):
 
         self.graph_model = self._create_graph_model(dir_path=dir_path) if load_graph else None
 
-        self.trigger_model = self._create_trigger_model(dir_path=dir_path) if load_trigger else None
+        self.trigger_model = self._create_trigger_model(dir_path=dir_path) if load_triggers else None
 
         self.sc_params = self._create_sc_params(dir_path=dir_path) if load_graph else None
 

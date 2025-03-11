@@ -40,8 +40,9 @@ class MergeTemplateView(QWidget):
 
     def _reload_table(self):
         spike_templates = self.controller.model.spike_templates
-        unique_templates = np.unique(spike_templates[spike_templates > 0])
+        unique_templates = np.unique(spike_templates) # [spike_templates > 0])
         template_clusters = self.controller.graph_model.template_clusters
+
         assert len(template_clusters) == len(unique_templates)
 
         unique_template_clusters = np.unique(template_clusters)

@@ -699,6 +699,7 @@ class BaseCanvas(QOpenGLWindow):
             self._size = size
         except Exception as e:  # pragma: no cover
             # raise e
+            # import traceback; traceback.print_stack()
             logger.debug("Exception in paintGL: %s", str(e))
             return
 

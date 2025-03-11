@@ -838,13 +838,7 @@ class Supervisor(object):
         """When clusters are selected in the cluster view, register the action in the history
         stack, update the similarity view, and emit the global supervisor.select event unless
         update_views is False."""
-
-        import traceback
-        print("\n\n\n")
-        print(''.join(traceback.format_stack()))
-        print("\n\n\n")
-
-
+        
         if sender != self.cluster_view:
             return
         cluster_ids = obj['selected']
@@ -949,8 +943,6 @@ class Supervisor(object):
         # Remove non-existing clusters from the selection.
         #cluster_ids = self._keep_existing_clusters(cluster_ids)
         # Update the cluster view selection.
-        import traceback
-        print(''.join(traceback.format_stack()))
         self.cluster_view.select(cluster_ids, callback=callback)
 
     # Cluster view actions

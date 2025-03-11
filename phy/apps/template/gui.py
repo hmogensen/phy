@@ -103,7 +103,6 @@ class TemplateController(WaveformMixin, FeatureMixin, TemplateMixin, TraceMixin,
         return TriggerModel(dir_path=dir_path)
     
     def _create_sc_params(self, dir_path):
-        print("TemplateController._create_sc_params")
         return ScParams(dir_path=dir_path)
 
     def _set_supervisor(self):

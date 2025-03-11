@@ -202,6 +202,7 @@ def _create_qaction(gui, **kwargs):
                 logger.debug("User cancelled input prompt, aborting.")
                 return
         if len(args) < n_args:
+            # import traceback; traceback.print_stack()
             logger.warning(
                 "Invalid function arguments: expecting %d but got %d", n_args, len(args))
             return
