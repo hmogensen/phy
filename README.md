@@ -1,4 +1,4 @@
-NB: THIS FILE IS KEPT FOR REFERENCE. TO INSTALL FORKED VERSION, SEE INSTRUCTIONS.md FILE
+# NB: THIS FILE IS KEPT FOR REFERENCE. TO INSTALL FORKED VERSION, SEE INSTRUCTIONS.md FILE
 
 # phy: interactive visualization and manual spike sorting of large-scale ephys data
 

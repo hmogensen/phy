@@ -53,7 +53,7 @@ def update_toml_paths(source_dir, dest_dir):
 
 def copy_files(source_dir, dest_dir):
     Path(dest_dir).mkdir(parents=True, exist_ok=True)    
-    patterns = ['*.npy', 'params.py']
+    patterns = ['*.npy', 'params.py', 'orders.txt']
     
     for root, _, files in os.walk(source_dir):
         for pattern in patterns:
